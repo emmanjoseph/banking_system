@@ -7,28 +7,28 @@ import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import {
   Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
  import { z } from "zod"
 import CustomInput from './CustomInput'
+import {authFormSchema } from '@/lib/utils'
+import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { getLoggedInUser, signIn, signUp } from '@/lib/ACTIONS/user.actions'
  
-const formSchema = z.object({
-  email: z.string().email(),
-})
 
 
 const AuthForm = ({type}:{type:string}) => {
+     const router = useRouter();
      const [user, setUser] = useState(null);
+     const [loading, setIsLoading] = useState(false)
+    //  const loggedInUser = await getLoggedInUser();
+
+     const formSchema = authFormSchema(type)
 
        // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -40,10 +40,37 @@ const AuthForm = ({type}:{type:string}) => {
   })
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
+  const onSubmit= async (data: z.infer<typeof formSchema>) => {
+    // Do something with the form data.
     // ✅ This will be type-safe and validated.
-    console.log(values)
+    setIsLoading(true)
+    try {
+     console.log(data);
+    //  sign up with app-write
+    // create plain link token 
+    if (type === 'sign-up') {
+      const newUser = await signUp(data);
+      setUser(newUser)
+    }
+    if (type === 'sign-in') {
+      const response = await signIn(
+        {
+          email:data.email,
+          password:data.password
+        }
+      );
+      if (response) {
+        router.push('/')
+      }
+      // setUser(newUser)
+    }
+    } catch (error) {
+      console.log(error);
+      
+    }finally{
+
+      setIsLoading(false)
+    }
   }
 
 
@@ -88,51 +115,73 @@ const AuthForm = ({type}:{type:string}) => {
         <>
          <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-           <div className='form-item'>
-            <FormLabel className='form-label'>Email</FormLabel>
-            <div className="w-full flex-col"></div>
-            <FormControl>
-                <Input
-                placeholder='enter your email'
-                className='input-class'
-                {...field}
-                ></Input>
-            </FormControl>
-            <FormMessage className='form-message'/>
-           </div>
-          )}
+      {
+        type === 'sign-up' &&
+        <>
+        <div className="flex gap-4">
+        <CustomInput
+        control={form.control} name='firstName' label='First name' placeholder='John'
+        />
+          <CustomInput
+        control={form.control} name='lastName' label='Second name' placeholder='Joseph'
+        />
+        </div>
+        
+          <CustomInput
+        control={form.control} name='address' label='Address' placeholder='Enter your specific address'
+        />
+          <CustomInput
+        control={form.control} name='city' label='City' placeholder='Enter your city'
+        />
+        <div className="flex gap-4">
+        <CustomInput
+        control={form.control} name='state' label='State' placeholder='Example NewYork'
+        />
+          <CustomInput
+        control={form.control} name='postalcode' label='Postal code' placeholder='Example 11101'
+        />
+        </div>
+
+        <div className='flex gap-4'>
+        <CustomInput
+        control={form.control} name='dateOfBirth' label='Date of Birth' placeholder='yyyy-mm-dd'
+        />
+          <CustomInput
+        control={form.control} name='ssn' label='SSN' placeholder='Ex:1234'
+        />
+        </div>
+          
+        </>
+      
+      
+      }
+        <CustomInput 
+        control={form.control} name='email' label='Email' placeholder='user@gmail.com'
         />
         <CustomInput 
-        control={form.control} name='username' label='username' placeholder='Enter your username'
+        control={form.control} name='password' label='Password' placeholder='enter your password'
         />
-        <CustomInput 
-        control={form.control} name='username' label='username' placeholder='Enter your username'
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-           <div className='form-item'>
-            <FormLabel className='form-label'>Password</FormLabel>
-            <div className="w-full flex-col"></div>
-            <FormControl>
-                <Input
-                placeholder='enter your password'
-                className='input-class'
-                {...field}
-                ></Input>
-            </FormControl>
-            <FormMessage className='form-message'/>
-           </div>
-          )}
-        />
-        <Button type="submit">Submit</Button>
+        
+        <div className="flex flex-col gap-4">
+        <Button type="submit" className='form-btn' disabled={loading}>{
+          loading ? (<>
+          <Loader2 size={20} className='animate-spin'/>&nbsp;
+          loading ...
+          </>) 
+          :
+          type === 'sign-in' ? "Sign in" : "Sign up"
+          }</Button>
+        </div>
+        
       </form>
     </Form>
+    <footer className='flex justify-center gap-1'>
+      <p className='text-14 font-normal'>{
+        type === 'sign-in' ?'Dont have an account?' : "Already have an account?" 
+        }</p>
+
+        <Link className='form-link' href={type === 'sign-in'?'/sign-up':'/sign-in'}>{type === 'sign-in'? <span>Sign up</span>: <span>Sign in</span> }</Link>
+    </footer>
         </>
     )
     }

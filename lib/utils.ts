@@ -76,7 +76,7 @@ export function formatAmount(amount: number): string {
   return formatter.format(amount);
 }
 
-export const parseStringify = (value: any) => JSON.parse(JSON.stringify(value));
+export const parseStringify = (value:unknown) => JSON.parse(JSON.stringify(value));
 
 export const removeSpecialCharacters = (value: string) => {
   return value.replace(/[^\w\s]/gi, "");
@@ -195,17 +195,20 @@ export const getTransactionStatus = (date: Date) => {
   return date > twoDaysAgo ? "Processing" : "Success";
 };
 
-export const authFormSchema = (type: string) => z.object({
-  // sign up
-  firstName: type === 'sign-in' ? z.string().optional() : z.string().min(3),
-  lastName: type === 'sign-in' ? z.string().optional() : z.string().min(3),
-  address1: type === 'sign-in' ? z.string().optional() : z.string().max(50),
-  city: type === 'sign-in' ? z.string().optional() : z.string().max(50),
-  state: type === 'sign-in' ? z.string().optional() : z.string().min(2).max(2),
-  postalCode: type === 'sign-in' ? z.string().optional() : z.string().min(3).max(6),
-  dateOfBirth: type === 'sign-in' ? z.string().optional() : z.string().min(3),
-  ssn: type === 'sign-in' ? z.string().optional() : z.string().min(3),
-  // both
-  email: z.string().email(),
-  password: z.string().min(8),
+
+
+export const authFormSchema =(type:string)=> z.object({
+// sign-up
+  firstName: type === 'sign-in' ?z.string().optional() : z.string().min(2),
+lastName: type === 'sign-in' ?z.string().optional() : z.string().min(2),
+address: type === 'sign-in' ?z.string().optional() : z.string().max(50),
+city: type === 'sign-in' ?z.string().optional() : z.string().max(50),
+state: type === 'sign-in' ?z.string().optional() : z.string().min(2).max(2),
+postalcode: type === 'sign-in' ?z.string().optional() : z.string().min(3).max(6),
+dateOfBirth: type === 'sign-in' ?z.string().optional() : z.string().min(2),
+ssn: type === 'sign-in' ?z.string().optional() : z.string().min(3,"less than 2 character(s)"),
+
+// both 
+email: z.string().email("Please enter your email"),
+password:z.string().min(8,"Password must be 8 character(s)"),
 })
