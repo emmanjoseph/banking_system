@@ -12,8 +12,9 @@ export const signIn = async ({email,password}:signInProps)=>{
         const response = await account.createEmailPasswordSession(email,password)
 
         return parseStringify(response)
-    } catch (error) {
-        console.log(error);
+    } catch (error:any) {
+        console.error("Error during sign-in:", error.message || error);
+        throw new Error(error.message || "An error occurred during sign-in"); // Re-throw the error for handling upstream
         
     }
 }
@@ -44,18 +45,30 @@ export const signUp = async (userData:SignUpParams)=>{
     }
 }
 
+export const logoutAccount = async ()=>{
+    try {
+        const {account} = await createSessionClient()
+        cookies().delete('appwrite-session')
+
+        await account.deleteSession('current')
+    } catch (error) {
+        
+    }
+}
+
 // ... your initilization functions
 
 export async function getLoggedInUser() {
-    try {
+   try {
       const { account } = await createSessionClient();
-
       const user = await account.get();
-      return await account.get();
-    } catch (error) {
+      return user; // Don't need to call account.get() twice
+   } catch (error) {
+      console.error("Error getting logged-in user:", error);
       return null;
-    }
-  }
+   }
+}
+
 
 
   
